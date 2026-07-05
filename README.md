@@ -4,7 +4,20 @@ Tracks which points of a large multi-dimensional parameter space have been marke
 whole axis-aligned "hyper-rows" into lower-dimensional zones as they fill up -- so a marked region
 that lines up with the axes of the space costs far less memory than the size of the space itself,
 even for spaces far larger than could be stored point-by-point (a highly irregular region that
-doesn't align with any axis degrades toward one entry per marked point).
+doesn't align with any axis degrades toward one entry per marked point). It shares its shape and
+coordinate conventions with [`Flattener`](https://github.com/lrmoorejr/flattener), which addresses
+the same kind of space without needing to track which points are marked.
+
+I use this class to reduce the computational cost of running multiple models over the same
+parameter space. For example, if one model plays Bingo and another plays checkers, I only need to
+test the checkers model against parameter combinations that are already known valid for the Bingo
+model, rather than re-deriving validity from scratch for every model. You can track either the
+valid or the invalid subset with this class -- choose whichever one is smaller, since that's the
+one that costs less memory to store. This is the same shape of problem as constraint handling in
+combinatorial test generation (tools like PICT or ACTS), design-space exploration, or pruning
+known-invalid trials during hyperparameter search: anywhere a feasibility/validity check over a
+parameter space is expensive enough that you'd rather cache and compress the result than
+recompute it.
 
 ```cpp
 #include "TensorMask.hpp"
@@ -28,7 +41,8 @@ information up into a zone over the *remaining* dimensions -- so a whole marked 
 sub-cube costs one entry in a lower-dimensional zone rather than one entry per point it covers.
 This trades some per-`contains()`-call work (checking a handful of zones instead of one flat
 lookup) for a memory bound that tracks how *regular* the marked region is, rather than how large
-the space is.
+the space is -- the same idea as run-length encoding, generalized from a single dimension to
+however many the space has, collapsing along whichever axis happens to fill up first.
 
 ## Views: `configure()`
 
