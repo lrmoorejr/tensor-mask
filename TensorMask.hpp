@@ -18,15 +18,16 @@
 
 #include <cstdint>
 #include <numeric>
+#include <stdexcept>
 #include <unordered_set>
 #include <unordered_map>
 #include <set>
 #include <utility>
 
 // Ensure.hpp is an optional dependency: if it's available (either as part of this
-// checkout or vendored alongside this header), use its ensure() for a formatted
-// diagnostic on failure; otherwise fall back to plain assert() so this header still
-// works standalone.
+// checkout or vendored alongside this header), use its ensure()/throw_if() for a
+// formatted diagnostic on failure; otherwise fall back to equivalent local
+// implementations so this header still works standalone.
 #if __has_include("commons/Ensure.hpp")
 	#include "commons/Ensure.hpp"
 #elif __has_include("Ensure.hpp")
@@ -39,6 +40,18 @@
 	// itself, so this still catches that case even under an unknown filename.
 	#if !defined(COMMONS_ENSURE_HPP) && !defined(ensure)
 		#define ensure(condition, ...) assert((condition))
+	#endif
+	// (throw_if is a function template, not a macro, so #ifndef can't guard
+	// it directly -- redefining it without this check would be a hard error.)
+	// A second guard (distinct from COMMONS_ENSURE_HPP) covers the case where two
+	// headers using this same standalone fallback are included together.
+	#if !defined(COMMONS_ENSURE_HPP) && !defined(COMMONS_THROW_IF_FALLBACK_DEFINED)
+	#define COMMONS_THROW_IF_FALLBACK_DEFINED
+	template<class T, class... Args>
+	constexpr inline void throw_if(bool condition, Args&&... args) {
+		if (condition)
+			throw T(std::forward<Args>(args)...);
+	}
 	#endif
 #endif
 
@@ -63,8 +76,8 @@ typedef std::vector<unsigned int> FlattenerShape;
  * configure() narrows add()/contains()/index()/flatten()/size() to operate against a subset of
  * dimensions rather than the full space; switching configuration never discards anything marked
  * under a previous configuration, at any granularity. Within whichever shape is currently
- * configured, flat indices must be add()ed in ascending order -- add() aborts via ensure() if
- * this is violated.
+ * configured, flat indices must be add()ed in ascending order -- add() throws std::invalid_argument
+ * if this is violated.
  *
  * @tparam I Type used for flat indices and the total element count of the configured space.
  * Defaults to uint64_t; must be able to represent the flattened size of whichever dimension
@@ -160,7 +173,7 @@ public:
 	 * @return The coordinate of @p dimension corresponding to @p flatIndex.
 	 */
 	inline unsigned int index(unsigned int dimension, unsigned int flatIndex) const {
-		ensure(configuredZone != nullptr);
+		throw_if<std::logic_error>(configuredZone == nullptr, "TensorMask::index called before configure()");
 		return configuredZone->flattener.index(dimension, flatIndex);
 	}
 
@@ -173,7 +186,7 @@ public:
 	 * @return The flat index corresponding to @p coordinates.
 	 */
 	inline unsigned int flatten(const std::vector<unsigned int>& coordinates) const {
-		ensure(configuredZone != nullptr);
+		throw_if<std::logic_error>(configuredZone == nullptr, "TensorMask::flatten called before configure()");
 		return configuredZone->flattener.flatten(coordinates);
 	}
 
@@ -220,7 +233,7 @@ public:
 	 * @brief Marks the given flat index within the currently configured space.
 	 *
 	 * Indices must be added in strictly ascending order within whichever shape is currently
-	 * configured; this is checked via ensure(), which aborts the process on violation.
+	 * configured; this is checked via throw_if(), which throws std::invalid_argument on violation.
 	 *
 	 * @param index A flat index within the configured space, in `[0, size())`.
 	 */
@@ -285,8 +298,10 @@ private:
 		Bitmap bitmap = 0;
 		int lastIndex = -1;
 		for(It iterator = begin; iterator != end; ++iterator) {
-			ensure(static_cast<int>(*iterator) > lastIndex);		// Ascending order
-			ensure(*iterator < shape.size());	// Valid range
+			throw_if<std::invalid_argument>(static_cast<int>(*iterator) <= lastIndex,
+				"TensorMask::configure: parameterIndices must be in strictly ascending order");
+			throw_if<std::out_of_range>(*iterator >= shape.size(),
+				"TensorMask::configure: parameterIndices contains an out-of-range dimension index");
 			lastIndex = *iterator;
 
 			bitmap |= 1L << *iterator;
@@ -307,7 +322,8 @@ private:
 	}
 
 	void add(I index, Zone* zone, bool alwaysCheckRows = false) {
-		ensure(zone->contents.empty() || zone->lastAdded <= index);
+		throw_if<std::invalid_argument>(!zone->contents.empty() && zone->lastAdded > index,
+			"TensorMask::add: indices must be added in ascending order");
 		zone->contents.insert(index);
 		zone->lastAdded = index;
 
