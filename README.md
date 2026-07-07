@@ -33,7 +33,7 @@ mask.contains(mask.flatten({0, 0, 1})); // true
 mask.contains(mask.flatten({0, 1, 0})); // false -- a different pixel
 ```
 
-## Why not just a `std::vector<bool>` or `std::unordered_set`?
+## Why not just a std::vector<bool> or std::unordered_set?
 
 Both work fine until the space is too large to enumerate point-by-point -- a `std::vector<bool>`
 needs one bit per point up front regardless of how many are actually marked, and a flat set needs
@@ -46,7 +46,7 @@ lookup) for a memory bound that tracks how *regular* the marked region is, rathe
 the space is -- the same idea as run-length encoding, generalized from a single dimension to
 however many the space has, collapsing along whichever axis happens to fill up first.
 
-## Views: `configure()`
+## Views: configure()
 
 A `TensorMask` is constructed with the full shape of the space, but `add()`/`contains()`/`index()`/
 `flatten()`/`size()` all operate against whichever subset of dimensions is currently
