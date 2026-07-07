@@ -85,4 +85,4 @@ the caller supplying indices, not to be a recoverable, expected condition.
 
 ## License
 
-Apache License 2.0 -- see [LICENSE](LICENSE).
+Apache License 2.0 -- see [LICENSE](https://github.com/lrmoorejr/tensor-mask/blob/main/LICENSE).
