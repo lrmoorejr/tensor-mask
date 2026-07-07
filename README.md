@@ -1,5 +1,7 @@
 # TensorMask
 
+[API docs](https://lrmoorejr.github.io/tensor-mask/)
+
 Tracks which points of a large multi-dimensional parameter space have been marked, compressing
 whole axis-aligned "hyper-rows" into lower-dimensional zones as they fill up -- so a marked region
 that lines up with the axes of the space costs far less memory than the size of the space itself,
