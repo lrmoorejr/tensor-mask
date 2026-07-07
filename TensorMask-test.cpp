@@ -23,7 +23,7 @@ TEST_CASE( "No cells marked" ) {
 	TensorMask<> mask({2, 3, 4});
 
 	mask.configure({0, 1, 2});
-	for(int index = 0; index < mask.size(); ++index) {
+	for(unsigned int index = 0; index < mask.size(); ++index) {
 		const bool isMarked = mask.contains(index);
 		CHECK(!isMarked);
 	}
@@ -37,7 +37,7 @@ TEST_CASE( "One cell marked" ) {
 	const bool isMarked = mask.contains(0);
 	CHECK(isMarked);
 
-	for(int index = 1; index < mask.size(); ++index) {
+	for(unsigned int index = 1; index < mask.size(); ++index) {
 		const bool isMarked = mask.contains(index);
 		CHECK(!isMarked);
 	}
@@ -52,7 +52,7 @@ TEST_CASE( "One marked cell from subzone" ) {
 	CHECK(isMarked);
 
 	mask.configure({0, 1, 2});
-	for(int index = 0; index < mask.size(); ++index) {
+	for(unsigned int index = 0; index < mask.size(); ++index) {
 		const bool isMarked = mask.contains(index);
 		if(mask.index(0, index) == 0 && mask.index(1, index) == 0)
 			CHECK(isMarked);
@@ -75,7 +75,7 @@ TEST_CASE( "One marked cell from two subzones" ) {
 	CHECK(isMarked);
 
 	mask.configure({0, 1, 2});
-	for(int index = 0; index < mask.size(); ++index) {
+	for(unsigned int index = 0; index < mask.size(); ++index) {
 		const bool isMarked = mask.contains(index);
 		if((mask.index(0, index) == 0 && mask.index(1, index) == 0) || (mask.index(1, index) == 0 && mask.index(2, index) == 0))
 			CHECK(isMarked);
@@ -93,7 +93,7 @@ TEST_CASE( "One marked cell in superzone doesn't affect subzone" ) {
 	CHECK(isMarked);
 
 	mask.configure({0, 1});
-	for(int index = 0; index < mask.size(); ++index) {
+	for(unsigned int index = 0; index < mask.size(); ++index) {
 		const bool isMarked = mask.contains(index);
 		CHECK(!isMarked);
 	}
@@ -106,7 +106,7 @@ TEST_CASE( "Subzone drawing from subberzone" ) {
 	mask.add(0);
 	mask.configure({0, 1});
 
-	for(int index = 0; index < mask.size(); ++index) {
+	for(unsigned int index = 0; index < mask.size(); ++index) {
 		const bool isMarked = mask.contains(index);
 		if(mask.index(0, index) == 0)
 			CHECK(isMarked);
@@ -117,7 +117,7 @@ TEST_CASE( "Subzone drawing from subberzone" ) {
 
 TEST_CASE( "Default configuration + reset()" ) {
 	TensorMask<> mask({2, 3, 4});
-	for(int index = 0; index < mask.size(); ++index) {
+	for(unsigned int index = 0; index < mask.size(); ++index) {
 		const bool isMarked = mask.contains(index);
 		CHECK(!isMarked);
 	}
@@ -127,13 +127,13 @@ TEST_CASE( "Default configuration + reset()" ) {
 	mask.add(1);
 
 	mask.configure({0,1,2});
-	for(int index = 0; index < mask.size(); ++index) {
+	for(unsigned int index = 0; index < mask.size(); ++index) {
 		const bool isMarked = mask.contains(index);
 		CHECK(isMarked);
 	}
 
 	mask.reset();
-	for(int index = 0; index < mask.size(); ++index) {
+	for(unsigned int index = 0; index < mask.size(); ++index) {
 		const bool isMarked = mask.contains(index);
 		CHECK(!isMarked);
 	}
@@ -203,12 +203,12 @@ TEST_CASE( "Fuzz" ) {
 
 		const int count = countDistribution(generator);
 		std::set<int> expectedSet;
-		while(expectedSet.size() < count)
+		while(expectedSet.size() < static_cast<size_t>(count))
 			expectedSet.insert(indexDistribution(generator));
 
 		std::vector<unsigned int> expectedVector(expectedSet.begin(), expectedSet.end());
 		expectedSet.clear();
-		for(int i = 0; i < expectedVector.size(); ++i) {
+		for(size_t i = 0; i < expectedVector.size(); ++i) {
 			mask.add(expectedVector[i]);
 			expectedSet.insert(expectedVector[i]);
 
